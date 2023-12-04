@@ -1,3 +1,5 @@
+Using the Advent of Code event to learn Kotlin :) 
+
 # aoc-2023-in-kotlin
 
 Welcome to the Advent of Code[^aoc] Kotlin project created by [flacchom][github] using the [Advent of Code Kotlin Template][template] delivered by JetBrains.
