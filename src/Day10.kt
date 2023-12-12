@@ -1,5 +1,3 @@
-import kotlin.math.max
-
 fun main() {
 
     data class Node (val x: Int, val y: Int, val content: Char, var distance: Int) {
