@@ -72,7 +72,6 @@ fun main() {
 				}
 			}
 		}
-
 		return min(goals)
 	}
 
