@@ -90,6 +90,7 @@ fun main() {
         val height = input.size
         val width = input[0].length
         val map = Array(height) {Array(width) {'.'} }
+        val mapWithoutTrash = Array(height) {Array(width) {'.'} }
 
         val q = ArrayDeque<Node>()
         for ((i, line) in input.withIndex()) {
@@ -99,7 +100,6 @@ fun main() {
             }
         }
 
-        var maxValue = 0
         val visited = mutableListOf<Node>()
         while (q.isNotEmpty()) {
             val current = q.removeFirst()
@@ -107,14 +107,62 @@ fun main() {
             if (current in visited) {
                 continue
             }
+            mapWithoutTrash[current.y][current.x] = current.content
             visited.add(current)
 
-            if (current.distance > maxValue) {
-                maxValue = current.distance
-            }
             q.addAll(current.getNeighbours(map))
         }
-        return maxValue
+
+        /* detecting inside
+        *
+        * seeing a wall '|' means we are inside and seeing a wall again means we're outside again
+        *
+        * need to consider walking on a edge:
+        *                                    ............
+        * walking from here on to an edge -> ..F-----7... would end up outside
+        *                                    ..|.....|...
+        *                                    ..|.....|...
+        *                                   .............
+        *
+        *                                    ........|...
+        *                                    ........|...
+        * walking from here on to an edge -> ..F-----J... would end up inside
+        *                                    ..|........
+        *                                    ..|........
+        *
+        * same reasoning for vertical movement
+        *
+        * */
+        var c = 0
+        var lastChar = ' '
+        mapWithoutTrash.forEachIndexed { j , item ->
+            var inArea = false
+            item.forEachIndexed { i, s ->
+                if (!inArea && s == '|') {
+                    inArea = true
+                } else if (inArea && s == '|') {
+                    inArea = false
+                }
+                if (s == 'F') {
+                    lastChar = 'F'
+                }
+                if (s == 'J' && lastChar == 'F') {
+                    inArea = !inArea
+                }
+                if (s == 'L') {
+                    lastChar = 'L'
+                }
+                if (s == '7' && lastChar == 'L') {
+                    inArea = !inArea
+                }
+                if (inArea && s == '.') {
+                    mapWithoutTrash[j][i] = 'I'
+                    c++
+                }
+            }
+        }
+
+        return c
     }
 
     val input = readInput("Day10")
