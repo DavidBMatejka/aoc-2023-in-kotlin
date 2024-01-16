@@ -133,36 +133,35 @@ fun main() {
         * same reasoning for vertical movement
         *
         * */
-        var c = 0
+        var counterInside = 0
         var lastChar = ' '
-        mapWithoutTrash.forEachIndexed { j , item ->
-            var inArea = false
-            item.forEachIndexed { i, s ->
-                if (!inArea && s == '|') {
-                    inArea = true
-                } else if (inArea && s == '|') {
-                    inArea = false
+        mapWithoutTrash.forEach {
+            var enclosed = false
+            it.forEach { s ->
+                if (!enclosed && s == '|') {
+                    enclosed = true
+                } else if (enclosed && s == '|') {
+                    enclosed = false
                 }
                 if (s == 'F') {
                     lastChar = 'F'
                 }
                 if (s == 'J' && lastChar == 'F') {
-                    inArea = !inArea
+                    enclosed = !enclosed
                 }
                 if (s == 'L') {
                     lastChar = 'L'
                 }
                 if (s == '7' && lastChar == 'L') {
-                    inArea = !inArea
+                    enclosed = !enclosed
                 }
-                if (inArea && s == '.') {
-                    mapWithoutTrash[j][i] = 'I'
-                    c++
+                if (enclosed && s == '.') {
+                    // mapWithoutTrash[j][i] = 'I'
+                    counterInside++
                 }
             }
         }
-
-        return c
+        return counterInside
     }
 
     val input = readInput("Day10")
