@@ -6,7 +6,6 @@ fun main() {
         "Up" to  Pair(0, -1),
         "Down" to Pair(0, 1)
     )
-    val parts = "SF-7L|J"
     val allowedDirections = mapOf(
         'S' to listOf("Up", "Down", "Left", "Right"),
         'F' to listOf("Down", "Right"),
