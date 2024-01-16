@@ -21,7 +21,7 @@ fun main() {
         ),
         '-' to mapOf(
             "Right" to "-7J",
-            "Left" to "F-J"
+            "Left" to "F-L"
         ),
         '7' to mapOf(
             "Left" to "F-L" ,
@@ -56,71 +56,20 @@ fun main() {
             val neighbours = mutableListOf<Node>()
             for (dir in dirs) {
                 val (dx, dy) = dir.value
-                if ((x + dx) !in map[0].indices || (y + dy) !in map.indices) continue
-
-                val neighbour = Node(x + dx, y + dy, map[y + dy][x + dx], distance + 1)
+                if ((x + dx) !in map[0].indices || (y + dy) !in map.indices) {
+                    continue
+                }
 
                 val neighbourContent = map[y + dy][x + dx]
-
-                if (neighbourContent !in parts) continue
-
+                if (neighbourContent !in parts) {
+                    continue
+                }
                 if (allowedNeighboursOf[this.content]?.get(dir.key)?.contains(neighbourContent) == true) {
                     neighbours.add(Node(this.x + dx, this.y + dy, neighbourContent, this.distance + 1))
                 }
            }
             return neighbours
         }
-    }
-
-    fun getPossibleNeighbours(node: Node, map: Array<Array<Char>>): List<Node> {
-        val width = map[0].size
-        val height = map.size
-        val possibleNeighbours = mutableListOf<Node>()
-        if (node.x > 0) {
-            val left = map[node.y][node.x - 1]
-            var content = ' '
-            var adding = false
-            when (left) {
-                'L' -> { content = 'L'; adding = true }
-                '-' -> { content = '-'; adding = true }
-                'F' -> {content = 'F'; adding = true }
-            }
-            if (adding) { possibleNeighbours.add(Node(node.x-1, node.y, content, node.distance + 1)) }
-        }
-        if (node.x < width - 1) {
-            val right = map[node.y][node.x + 1]
-            var content = ' '
-            var adding = false
-            when (right) {
-                '-' -> { content = '-'; adding = true }
-                '7' -> { content = '7'; adding = true }
-                'J' -> { content = 'J'; adding = true }
-            }
-            if (adding) { possibleNeighbours.add(Node(node.x+1, node.y, content, node.distance + 1)) }
-        }
-        if (node.y > 0) {
-            val up = map[node.y - 1][node.x]
-            var content = ' '
-            var adding = false
-            when (up) {
-                '|' -> { content = '|'; adding = true }
-                '7' -> { content = '7'; adding = true }
-                'F' -> { content = 'F'; adding = true }
-            }
-            if (adding) { possibleNeighbours.add(Node(node.x, node.y-1, content, node.distance + 1)) }
-        }
-        if (node.y < height - 1) {
-            val down = map[node.y + 1][node.x]
-            var content = ' '
-            var adding = false
-            when (down) {
-                '|' -> { content = '|'; adding = true }
-                'L' -> { content = 'L'; adding = true }
-                'J' -> { content = 'J'; adding = true }
-            }
-            if (adding) { possibleNeighbours.add(Node(node.x, node.y+1, content, node.distance + 1)) }
-        }
-        return possibleNeighbours
     }
 
     fun part1(input: List<String>): Int {
@@ -136,8 +85,6 @@ fun main() {
             }
         }
 
-//        map.forEach { it -> it.forEach { print(it) }; println() }
-
         var maxDistance = 0
         val visited = emptyList<Node>().toMutableList()
 
@@ -151,9 +98,8 @@ fun main() {
                 maxDistance = current.distance
             }
             visited.add(current)
-            val neighbours:List<Node> = getPossibleNeighbours(current, map)
-//            val neighbours = current.getNeighbours(map)
-            q.addAll(neighbours)
+
+            q.addAll(current.getNeighbours(map))
         }
 
         return maxDistance
@@ -171,18 +117,28 @@ fun main() {
                 if (map[i][j] == 'S') q.add(Node(j, i, 'S', 0))
             }
         }
-        val x = 3
-        val y = 2
-        println(map[y][x])
-        val start = Node(x, y, map[y][x], 0)
-        println(start.getNeighbours(map))
 
-        return -1
+        var maxValue = 0
+        val visited = mutableListOf<Node>()
+        while (q.isNotEmpty()) {
+            val current = q.removeFirst()
+
+            if (current in visited) {
+                continue
+            }
+            visited.add(current)
+
+            if (current.distance > maxValue) {
+                maxValue = current.distance
+            }
+            q.addAll(current.getNeighbours(map))
+        }
+        return maxValue
     }
 
 
     val input = readInput("Day10")
     part1(input).println()
-//    part2(input).println()
+    part2(input).println()
 
 }
