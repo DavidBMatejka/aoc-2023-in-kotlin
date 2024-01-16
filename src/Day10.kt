@@ -76,8 +76,7 @@ fun main() {
             }
         }
 
-        //map.forEach { it -> it.forEach { print(it) }; println() }
-        //q.println()
+//        map.forEach { it -> it.forEach { print(it) }; println() }
 
         var maxDistance = 0
         val visited = emptyList<Node>().toMutableList()
