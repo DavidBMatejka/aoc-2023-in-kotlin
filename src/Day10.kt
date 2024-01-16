@@ -7,38 +7,20 @@ fun main() {
         "Down" to Pair(0, 1)
     )
     val parts = "SF-7L|J"
-    val allowedNeighboursOf = mapOf(
-        'S' to mapOf(
-            "Up" to "F7|",
-            "Down" to "L|J",
-            "Right" to "-7J",
-            "Left" to "F-L"
-        ),
-        // S could be neighbour but since we start from S this won't occur
-        'F' to mapOf(
-            "Down" to "L|J",
-            "Right" to "-7J",
-        ),
-        '-' to mapOf(
-            "Right" to "-7J",
-            "Left" to "F-L"
-        ),
-        '7' to mapOf(
-            "Left" to "F-L" ,
-            "Down" to "L|J"
-        ),
-        'L' to mapOf(
-            "Up" to "F7|",
-            "Right" to "-7J"
-        ),
-        '|' to mapOf(
-            "Up" to "F7|",
-            "Down" to "L|J"
-        ),
-        'J' to mapOf(
-            "Up" to "F7|",
-            "Left" to "F-L"
-        )
+    val allowedDirections = mapOf(
+        'S' to listOf("Up", "Down", "Left", "Right"),
+        'F' to listOf("Down", "Right"),
+        '-' to listOf("Right", "Left"),
+        '7' to listOf("Left", "Down"),
+        'L' to listOf("Up", "Right"),
+        '|' to listOf("Up", "Down"),
+        'J' to listOf("Up", "Left")
+    )
+    val allowedPartsForDirection = mapOf(
+        "Up" to "F7|",
+        "Down" to "L|J",
+        "Right" to "-7J",
+        "Left" to "F-L"
     )
 
     data class Node (val x: Int, val y: Int, val content: Char, var distance: Int) {
@@ -54,20 +36,20 @@ fun main() {
 
         fun getNeighbours(map: Array<Array<Char>>): List<Node> {
             val neighbours = mutableListOf<Node>()
-            for (dir in dirs) {
-                val (dx, dy) = dir.value
+
+            val allowedDirs = allowedDirections[this.content] ?: return emptyList()
+            for (dir in allowedDirs) {
+                val (dx, dy) = dirs[dir] ?: Pair(0, 0)
+
                 if ((x + dx) !in map[0].indices || (y + dy) !in map.indices) {
                     continue
                 }
 
                 val neighbourContent = map[y + dy][x + dx]
-                if (neighbourContent !in parts) {
-                    continue
-                }
-                if (allowedNeighboursOf[this.content]?.get(dir.key)?.contains(neighbourContent) == true) {
+                if (allowedPartsForDirection[dir]?.contains(neighbourContent) == true) {
                     neighbours.add(Node(this.x + dx, this.y + dy, neighbourContent, this.distance + 1))
                 }
-           }
+            }
             return neighbours
         }
     }
@@ -136,9 +118,7 @@ fun main() {
         return maxValue
     }
 
-
     val input = readInput("Day10")
     part1(input).println()
     part2(input).println()
-
 }
