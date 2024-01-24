@@ -22,51 +22,39 @@ fun main() {
         return inversed
     }
 
-    // finds a pair of symbols, puts the line into chunks with a size according to the found index
-    // then checks if potential symmetry holds within the whole line by comparing the first to elements in the chunk
-    // and then checks for each line in the string
-    fun findSymmetry(strings: MutableList<String>): Int {
-        val firstLine = strings[0]
-        for (i in firstLine.indices) {
-            if (i + 1 == firstLine.length) { break }
-            if (firstLine[i] == firstLine[i + 1]) {
-                println("i = $i : ${firstLine[i]} ${firstLine[i + 1]}")
-                val chunk = firstLine.chunked(i+1).toMutableList()
-                if (chunk[0].length < chunk[1].length) {
-                    chunk[1] = chunk[1].dropLast(chunk[1].length - chunk[0].length)
-                }
-                else if (chunk[0].length > chunk[1].length) {
-                    chunk[0] = chunk[0].drop(chunk[0].length - chunk[1].length)
-                }
-                chunk[0] = chunk[0].reversed()
-                println("new chunk $chunk")
+    fun hamming(s1: String, s2: String): Int {
+        // strings must be of equal length
+        if (s1.length != s2.length) return -1
 
-                if (chunk[0] == chunk[1]) {
-                    println("potential symmetry at $i")
-                    var candidate = true
-                    for (j in 1..<strings.size) {
-                        val chunkForEachLine = strings[j].chunked(i+1).toMutableList()
-                        //chunkForEachLine.println()
-                        if (chunkForEachLine[0].length < chunkForEachLine[1].length) {
-                            chunkForEachLine[1] = chunkForEachLine[1].dropLast(chunkForEachLine[1].length - chunkForEachLine[0].length)
-                        }
-                        else if (chunkForEachLine[0].length > chunkForEachLine[1].length) {
-                            chunkForEachLine[0] = chunkForEachLine[0].drop(chunkForEachLine[0].length - chunkForEachLine[1].length)
-                        }
-                        chunkForEachLine[0] = chunkForEachLine[0].reversed()
-                        if (chunkForEachLine[0] != chunkForEachLine[1]) {
-                            candidate = false
-                        }
-                    }
-                    if (candidate) return i
-                }
+        var distance = 0
+        for (i in s1.indices) {
+            if (s1[i] != s2[i]) {
+                distance++
             }
         }
 
+        return distance
+    }
+
+    fun newSymmetry(pattern: List<String>, diff: Int): Int {
+        for (i in 0..<pattern.lastIndex) {
+            var sum = 0
+            for (j in pattern.indices) {
+                if ((i - j) !in pattern.indices || (i + 1 + j) !in pattern.indices) {
+                    break
+                }
+                sum += hamming(pattern[i - j], pattern[i + 1 + j])
+            }
+            if (sum == diff) {
+                return i
+            }
+        }
+
+        // no symmetry
         return -1
     }
 
-    fun part1(input: List<String>): Int {
+    fun part1(input: List<String>, diff: Int): Int {
         var sum = 0
 
         val split = input.fold(mutableListOf(mutableListOf<String>())) {acc, string ->
@@ -79,65 +67,24 @@ fun main() {
             acc
         }
 
-        for (i in split.indices) {
-            split[i].forEach(::println)
-            var mirror = findSymmetry(split[i])
+        for (pattern in split) {
+            val rowSym = newSymmetry(pattern, diff)
+            if (rowSym == -1) {
+                val colSym = newSymmetry(inverse(pattern), diff)
 
-            if (mirror == -1) {
-                val inverse = inverse(split[i]).toMutableList()
-
-                inverse.forEach(::println)
-                mirror = findSymmetry(inverse)
-
-                sum += 100 * (mirror + 1) // + 1 because I count from index 0 instead of index 1 like in the problem description
+                sum += (colSym + 1)
             } else {
-                sum += (mirror + 1) // // + 1 because I count from index 0 instead of index 1 like in the problem description
+                sum += 100 * (rowSym + 1)
             }
         }
         return sum
     }
 
-
-    fun part2(input: List<String>): Int {
-        var sum = 0
-        val split = input.fold(mutableListOf(mutableListOf<String>())) {acc, string ->
-            if (string.isBlank()) {
-                acc.add(mutableListOf())
-            }
-            else  {
-                acc.last().add(string)
-            }
-            acc
-        }
-
-        for (i in split.indices) {
-            val brute = split[i].toMutableList()
-            for ((index, line) in split[i].withIndex()) {
-                for (j in line.indices) {
-                    val b = if (line[j] == '#') {
-                        line.replaceRange(j,j + 1,".")
-                    } else line.replaceRange(j,j + 1,"#")
-                    brute[index] = b
-
-                    var mirror = findSymmetry(brute)
-                    println("found symmetry: $mirror")
-                    if (mirror == -1) {
-                        val inverse = inverse(brute).toMutableList()
-
-                        inverse.forEach(::println)
-                        mirror = findSymmetry(inverse)
-
-                        sum += 100 * (mirror + 1) // + 1 because I count from index 0 instead of index 1 like in the problem description
-                    } else {
-                        sum += (mirror + 1) // // + 1 because I count from index 0 instead of index 1 like in the problem description
-                    }
-                }
-            }
-        }
-        return sum
+    fun part2(input: List<String>, diff: Int): Int {
+        return part1(input, diff)
     }
 
-    val input = readInput("Day13_test")
-    part1(input).println()
-    //part2(input).println()
+    val input = readInput("Day13")
+    part1(input, 0).println()
+    part2(input, 1).println()
 }
