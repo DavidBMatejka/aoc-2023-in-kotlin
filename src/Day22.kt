@@ -4,13 +4,13 @@ import kotlin.math.max
 
 fun main() {
 	data class Point3(var x: Int, var y: Int, var z: Int)
-	data class Box(val points: List<Point3>)
+	data class Brick(val points: List<Point3>)
 
 	class Grid3d(val dimX: Int, val dimY: Int, val dimZ: Int) {
 		val grid = Array(dimX) { Array(dimY) { Array(dimZ) {0} } }
 
-		fun addAndSettle(box: Box) {
-			val pointsToAdd = box.points
+		fun addAndSettle(brick: Brick): Brick {
+			val pointsToAdd = brick.points
 			for (i in 0..<dimZ) {
 				var canFall = true
 				pointsToAdd.forEach {
@@ -26,7 +26,7 @@ fun main() {
 					}
 				}
 			}
-
+			return Brick(pointsToAdd)
 		}
 		override fun toString(): String {
 			var erg = ""
@@ -46,18 +46,9 @@ fun main() {
 	fun endpointsToPointslist(p: List<Int>, q:List<Int>): List<Point3> {
 		val points = mutableListOf<Point3>()
 
-		var higherPoint = emptyList<Int>()
-		val lowerPoint = if (p[2] <= q[2]) {
-			higherPoint = q
-			p
-		} else {
-			higherPoint = p
-			q
-		}
-
-		val dx = higherPoint[0] - lowerPoint[0]
-		val dy = higherPoint[1] - lowerPoint[1]
-		val dz = higherPoint[2] - lowerPoint[2]
+		val dx = p[0] - q[0]
+		val dy = p[1] - q[1]
+		val dz = p[2] - q[2]
 		val scalar = max(max(abs(dx), abs(dy)), abs(dz))
 
 		val vec = if (scalar != 0) {
@@ -67,11 +58,10 @@ fun main() {
 		}
 		for (i in 0..scalar) {
 			points.add(Point3(
-				lowerPoint[0] + vec.x * i,
-				lowerPoint[1] + vec.y * i,
-				lowerPoint[2] + vec.z * i))
+				q[0] + vec.x * i,
+				q[1] + vec.y * i,
+				q[2] + vec.z * i))
 		}
-
 		return points
 	}
 
@@ -82,7 +72,7 @@ fun main() {
 			2 to 0
 		)
 
-		val boxes = mutableListOf<Box>()
+		val bricks = mutableListOf<Brick>()
 		input.forEach { line ->
 			val (first, second) = line.split("~")
 			val p = first.split(",").map { it.toInt() }
@@ -95,7 +85,7 @@ fun main() {
 					maxDim[i] = q[i]
 				}
 			}
-			boxes.add(Box(endpointsToPointslist(p, q)))
+			bricks.add(Brick(endpointsToPointslist(p, q)))
 		}
 
 		val maxX = maxDim[0] ?: 0
@@ -103,8 +93,14 @@ fun main() {
 		val maxZ = maxDim[2] ?: 0
 		val grid = Grid3d(maxX + 1, maxY + 1, maxZ + 1)
 
-		boxes.forEach { grid.addAndSettle(it) }
+		val settledBricks = mutableListOf<Brick>()
+		bricks.forEach {
+			settledBricks.add(grid.addAndSettle(it))
+		}
 		println(grid)
+		settledBricks.forEach { it.println() }
+
+
 		return -1
 	}
 
