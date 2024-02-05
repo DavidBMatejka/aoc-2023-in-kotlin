@@ -127,7 +127,7 @@ fun main() {
 		}
 		println(erg)
 
-		var removeableBricks = mutableListOf<Brick>()
+		val removeableBricks = mutableListOf<Brick>()
 		sortedBricks.forEach { brick ->
 			var counts = true
 			brick.supporting.forEach {
@@ -141,10 +141,10 @@ fun main() {
 		return removeableBricks.size
 	}
 
-	fun part2(input: List<String>): Int {
-
-		return -1
-	}
+//	fun part2(input: List<String>): Int {
+//
+//		return -1
+//	}
 
 	val input = readInput("Day22")
 	part1(input).println()
