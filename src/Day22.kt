@@ -18,7 +18,6 @@ fun main() {
 		}
 	}
 
-
 	fun toBrick(l: String, r: String): Brick {
 		val points = mutableListOf<Point3>()
 		val (lx, ly, lz) = l.split(",").map { it.toInt() }
@@ -76,7 +75,7 @@ fun main() {
 		}
 	}
 
-	fun part1(input: List<String>): Int {
+	fun createListOfSortedAndRemovableBricks(input: List<String>): Pair<List<Brick>, List<Brick>> {
 		val bricks = mutableListOf<Brick>()
 		input.forEach { line ->
 			val (l, r) = line.split("~")
@@ -111,21 +110,6 @@ fun main() {
 				}
 			}
 		}
-		sortedBricks.forEach {
-			println(it)
-		}
-
-		var erg = ""
-		for (k in dimZ - 1 downTo 0) {
-			erg += "z_$k: \n"
-			for (i in 0..dimX) {
-				for (j in 0..dimY) {
-					erg += "${grid[i][j][k]} "
-				}
-				erg += "\n"
-			}
-		}
-		println(erg)
 
 		val removeableBricks = mutableListOf<Brick>()
 		sortedBricks.forEach { brick ->
@@ -136,17 +120,47 @@ fun main() {
 			if (counts) removeableBricks.add(brick)
 		}
 
+		return Pair(sortedBricks, removeableBricks)
+	}
 
-
+	fun part1(input: List<String>): Int {
+		val (_, removeableBricks) = createListOfSortedAndRemovableBricks(input)
 		return removeableBricks.size
 	}
 
-//	fun part2(input: List<String>): Int {
-//
-//		return -1
-//	}
+	fun part2(input: List<String>): Int {
+		val (sortedBricks, removeableBricks) = createListOfSortedAndRemovableBricks(input)
+
+		val chainreactingBricks = mutableListOf<Brick>()
+		sortedBricks.forEach {brick ->
+			if (brick !in removeableBricks) {
+				chainreactingBricks.add(brick)
+			}
+		}
+
+		var sum = 0
+		chainreactingBricks.forEach { chainreactingBrick ->
+			val falling = mutableSetOf(chainreactingBrick)
+			val q = mutableListOf(chainreactingBrick)
+			while (q.isNotEmpty()) {
+				val current = q.removeFirst()
+				current.supporting.forEach { supportedByCurrent ->
+					if (supportedByCurrent !in falling) {
+						if (supportedByCurrent.supportedBy.all { it in falling }) {
+							q.add(supportedByCurrent)
+							falling.add(supportedByCurrent)
+						}
+					}
+				}
+			}
+			sum += falling.size - 1
+		}
+
+		println(sum)
+		return -1
+	}
 
 	val input = readInput("Day22")
 	part1(input).println()
-//    part2(input).println()
+    part2(input).println()
 }
