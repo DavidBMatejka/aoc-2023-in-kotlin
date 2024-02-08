@@ -63,27 +63,3 @@ fun main() {
     part1(input).println()
     part2(input).println()
 }
-
-// didn't bother implementing lcm and gcd myself... sorry
-// source: https://stackoverflow.com/questions/4201860/how-to-find-gcd-lcm-on-a-set-of-numbers
-private fun lcm(a: Long, b: Long): Long {
-    return a * (b / gcd(a, b))
-}
-
-private fun lcm(input: LongArray): Long {
-    var result = input[0]
-    for (i in 1 until input.size) result = lcm(result, input[i])
-    return result
-}
-
-@Suppress("NAME_SHADOWING")
-private fun gcd(a: Long, b: Long): Long {
-    var a = a
-    var b = b
-    while (b > 0) {
-        val temp = b
-        b = a % b
-        a = temp
-    }
-    return a
-}
