@@ -7,7 +7,6 @@ enum class Types {
 
 fun main() {
 	data class Module(val name: String, var type: Types = Types.BROADCASTER) {
-		var lastReceived = 0
 		val children = mutableListOf<Module>()
 		var lastPulses = mutableMapOf<String, Int>()
 		var on = false
@@ -77,40 +76,25 @@ fun main() {
 
 	fun part1(input: List<String>): Long {
 		val graph = toGraph(input)
-		graph.forEach { (_, v) ->
-			println("${v.name} -> ${v.children}")
-		}
-		println()
 
 		val start = graph["broadcaster"] ?: return -10
 		val q = mutableListOf<Pair<Module, Int>>()
 
-		val states = mutableListOf<Map<String, String>>()
-		var state = mutableMapOf<String, String>()
-		graph.forEach { (_, v) ->
-			if (v.type == Types.AND) state[v.name] = v.lastPulses.toString()
-			else if (v.type == Types.FLIPFLOP) state[v.name] = v.on.toString()
-		}
-
 		var buttonPushed = 0
 		var highCount = 0
 		var lowCount = 0
-		val cycle = mutableMapOf<Int, Pair<Int, Int>>()
-        while (!states.contains(state)) {
-			if (buttonPushed == 1000) break
+        while (buttonPushed < 1000) {
 			buttonPushed++
 			lowCount++ // button pulse
 
-			states.add(state)
-//			println()
-			println(buttonPushed)
 			q.add(Pair(start, 0))
-//			println(states)
 			while (q.isNotEmpty()) {
 				val (current, pulse) = q.removeFirst()
 				current.children.forEach {
 					val nextPulse = it.receivePulse(pulse, current)
-//					println("${current.name} --$pulse-> ${it.name}")
+					if (current.name == "vd" && pulse == 0) {
+						return buttonPushed.toLong()
+					}
 					if (pulse == 1) highCount++
 					else if (pulse == 0) lowCount++
 					if (nextPulse != -10) {
@@ -118,26 +102,54 @@ fun main() {
 					}
 				}
 			}
-			state = mutableMapOf()
-			graph.forEach { (_, v) ->
-				if (v.type == Types.AND) state[v.name] = v.lastPulses.toString()
-				else if (v.type == Types.FLIPFLOP) state[v.name] = v.on.toString()
-			}
-			cycle[buttonPushed] = Pair(lowCount, highCount)
 		}
-//		println(states)
 
-		var sum = highCount.toLong() * lowCount.toLong()
-
-		return sum
+		return highCount.toLong() * lowCount.toLong()
 	}
 
-	fun part2(input: List<String>): Int {
+	fun part2(input: List<String>): Long {
+		val graph = toGraph(input)
 
-		return -1
+		val start = graph["broadcaster"] ?: return -10
+		val q = mutableListOf<Pair<Module, Int>>()
+
+		var buttonPushed = 0
+		var highCount = 0
+		var lowCount = 0
+
+		val vdSize = graph["vd"]?.lastPulses?.size
+		val vdIns = mutableMapOf<String, Int>()
+
+		while (true) {
+			buttonPushed++
+			lowCount++ // button pulse
+
+			q.add(Pair(start, 0))
+			while (q.isNotEmpty()) {
+				val (current, pulse) = q.removeFirst()
+				current.children.forEach {
+					val nextPulse = it.receivePulse(pulse, current)
+					if (current.name == "vd") {
+						current.lastPulses.forEach { (k, vdIn) ->
+							if (vdIn == 1 && k !in vdIns) {
+								vdIns[k] = buttonPushed
+							}
+							if (vdSize == vdIns.size) {
+								return lcm(vdIns.values.map { c -> c.toLong() }.toList())
+							}
+						}
+					}
+					if (pulse == 1) highCount++
+					else if (pulse == 0) lowCount++
+					if (nextPulse != -10) {
+						q.add(Pair(it, nextPulse))
+					}
+				}
+			}
+		}
 	}
 
 	val input = readInput("Day20")
 	part1(input).println()
-	// part2(input).println()
+	 part2(input).println()
 }
