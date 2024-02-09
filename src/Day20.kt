@@ -39,6 +39,7 @@ fun main() {
 
 	fun toGraph(input: List<String>): MutableMap<String, Module> {
 		val graph = mutableMapOf<String, Module>()
+		// adding vertices
 		input.forEach { line ->
 			val (source, _) = line.split("->")
 			if (source.first() == '%' || source.first() == '&') {
@@ -53,6 +54,7 @@ fun main() {
 			}
 		}
 
+		// adding edges
 		input.forEach { line ->
 			val (source, dest) = line.split("->")
 			if (source.first() == '%' || source.first() == '&') {
