@@ -2,125 +2,98 @@ import kotlin.math.pow
 
 fun main() {
 
-    data class Pos (val x: Int, val y: Int, val parent: Pos?) {
-        override fun equals(other: Any?): Boolean {
-            return other is Pos && other.x == this.x && other.y == this.y
-        }
+    data class Pos(val x: Int, val y: Int) {
+        fun isPossible(map: Array<Array<Char>>, infiniteMap: Boolean = false): Boolean {
+            var tmpX = x
+            var tmpY = y
 
-        override fun hashCode(): Int {
-            var result = x
-            result = 31 * result + y
-            return result
-        }
-    }
-    data class Cell(val content: Char, var visited: Boolean, val time: Int )
-
-    fun getPossibleMoves(current: Pos, width: Int, height: Int, map: Array<Array<Cell>>, visited: MutableList<Pos>): List<Pos> {
-        val moves = mutableListOf<Pos>()
-        if (current.x > 0 && map[current.y][current.x - 1].content != '#') {
-            val move = Pos(current.x - 1, current.y, current)
-            if (move !in visited && move !in moves) moves.add(move)
-        }
-        if (current.x < width - 1 && map[current.y][current.x + 1].content != '#') {
-            val move = Pos(current.x + 1, current.y, current)
-            if (move !in visited && move !in moves) moves.add(move)
-        }
-        if (current.y > 0 && map[current.y - 1][current.x].content != '#') {
-            val move = Pos(current.x, current.y - 1, current)
-            if (move !in visited && move !in moves) moves.add(move)
-        }
-        if (current.y < height - 1 && map[current.y + 1][current.x].content != '#') {
-            val move = Pos(current.x, current.y + 1, current)
-            if (move !in visited && move !in moves) moves.add(move)
-        }
-
-        return moves
-    }
-
-    fun countSteps(start: Pos, map: Array<Array<Cell>>, steps: Int): Int {
-        val width = map[0].size
-        val height = map.size
-        var steps = steps
-        val q = mutableListOf<Pos>()
-        q.add(start)
-        map[start.y][start.x] = Cell('.', false, 0)
-        val visited = mutableListOf <Pos>()
-        var time = 0
-
-        while (steps > 0) {
-            val current = mutableListOf<Pos>()
-            q.forEach {
-                val possibleMoves = getPossibleMoves(it, width, height, map, visited)
-                possibleMoves.forEach { possibleMove -> if (possibleMove !in current) current.add(possibleMove) }
+            if (infiniteMap) {
+                tmpX = x % map.size
+                tmpY = y % map.size
+                while (tmpX < 0) tmpX += map.size
+                while (tmpY < 0) tmpY += map.size
             }
+
+            if (tmpX !in map.indices || tmpY !in map.indices) return false
+            return map[tmpY][tmpX] != '#'
+        }
+    }
+
+    data class Vel(val vx: Int, val vy: Int)
+
+    val dirs = mapOf(
+        "R" to Vel(1, 0),
+        "L" to Vel(-1, 0),
+        "U" to Vel(0, -1),
+        "D" to Vel(0, 1)
+    )
+
+    fun toMap(input: List<String>): Array<Array<Char>> {
+        val width = input[0].length
+        val height = input.size
+        val map = Array(height) { Array(width) { '.' } }
+
+        input.forEachIndexed { i, it ->
+            for (j in 0..<width) {
+                map[i][j] = it[j]
+            }
+        }
+        return map
+    }
+
+    fun bfs(map: Array<Array<Char>>, stepsToTake: Int, infiniteMap: Boolean = false): Map<Pos, Int> {
+        val q = mutableListOf<Pos>()
+        val seen = mutableMapOf<Pos, Int>()
+        val start = Pos(map.size / 2, map.size / 2)
+        q.add(start)
+        seen[start] = 0
+
+        var stepsRemaining = stepsToTake
+        var steps = 1
+        while (stepsRemaining > 0) {
+            val current = mutableListOf<Pos>()
+            q.forEach { current.add(it) }
             q.clear()
 
-            current.forEach { if (it !in visited) visited.add(it) }
-            q.addAll(current)
-
-            time++
-
-            for (move in current) {
-                map[move.y][move.x] = Cell('O', true, time)
-            }
-            steps--
-        }
-
-        var sum = 0
-        for ((i, line) in map.withIndex()) {
-            for ((j, c) in line.withIndex()) {
-                if (map[i][j].visited && (c.time % 2) == 0) {
-                    sum++
+            current.forEach {
+                dirs.forEach { (_, dir) ->
+                    val next = Pos(it.x + dir.vx, it.y + dir.vy)
+                    if (next !in seen && next.isPossible(map, infiniteMap)) {
+                        seen[next] = steps
+                        q.add(next)
+                    }
                 }
             }
+
+            steps++
+            stepsRemaining--
         }
-        return sum
+        return seen
     }
 
     fun part1(input: List<String>): Int {
-        var start = Pos(0, 0, null)
-        val width = input[0].length
-        val height = input.size
-        val map = Array(height) {Array(width) {Cell('.', false, 0)} }
+        val map = toMap(input)
+        val seen = bfs(map, 64)
 
-        input.forEachIndexed { i, it ->
-            if (it.contains("S")) {
-                start = Pos(it.indexOf("S"), i, null)
-            }
-            for (j in 0..<width) {
-                map[i][j] = Cell(it[j], false, 0)
-            }
-        }
-
-        return countSteps(start, map, 64)
+        return seen.filter {it.value % 2 == 0 }.size
     }
 
-    fun part2(input: List<String>): Int {
-        var start = Pos(0, 0, null)
-        val width = input[0].length
-        val height = input.size
-        val map = Array(height) {Array(width) {Cell('.', false, 0)} }
+    // src: https://colab.research.google.com/github/derailed-dash/Advent-of-Code/blob/master/src/AoC_2023/Dazbo's_Advent_of_Code_2023.ipynb#scrollTo=JxcyYSRWDvYy
+    fun part2(input: List<String>): Long {
+        val map = toMap(input)
 
-        input.forEachIndexed { i, it ->
-            if (it.contains("S")) {
-                start = Pos(it.indexOf("S"), i, null)
-            }
-            for (j in 0..<width) {
-                map[i][j] = Cell(it[j], false, 0)
-            }
-        }
-        println(start)
+        val stepCounts = mutableListOf<Long>()
+        stepCounts.add(bfs(map, 65, true).filter { it.value % 2 == 1 }.size.toLong())
+        stepCounts.add(bfs(map, 196, true).filter { it.value % 2 == 0 }.size.toLong())
+        stepCounts.add(bfs(map, 327, true).filter { it.value % 2 == 1 }.size.toLong())
 
-        val steps = 26501365L
-        val gridWidth = (steps / width) - 1
-        val odd = ((gridWidth / 2) * 2 + 1.0).pow(2.0).toLong()
-        val even = ((gridWidth + 1) / 2 * 2.0).pow(2.0).toLong()
+        val a = (stepCounts[2] - (2 * stepCounts[1]) + stepCounts[0]) / 2
+        val b = stepCounts[1] - stepCounts[0] - a
+        val c = stepCounts[0]
 
-        println("$odd $even")
-        val oddPoints = countSteps(start, map, width * 2 + 1)
-        val evenPoints = countSteps(start, map, width * 2)
-        println("$oddPoints $evenPoints")
-        return -1
+        val x = (26501365 - map.size / 2) / map.size
+
+        return (a * x.toDouble().pow(2) + b * x + c).toLong()
     }
 
     val input = readInput("Day21")
