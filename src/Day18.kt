@@ -131,7 +131,6 @@ fun main() {
                     inArea = !inArea
                 }
 
-
                 if (inArea && s == ".") {
                     terrain[j][i] = "x"
                     c++
