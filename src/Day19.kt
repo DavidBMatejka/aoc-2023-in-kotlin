@@ -110,12 +110,92 @@ fun main() {
         return sumOfParts
     }
 
-    fun part2(input: List<String>): Int {
+    fun LongRange.length(): Long {
+        return last - first + 1
+    }
 
-        return -1
+    fun countRanges(ranges: Map<Char, LongRange>, workflows: MutableMap<String, List<Rule>>, workflowName: String): Long {
+        @Suppress("NAME_SHADOWING") val ranges = ranges.toMutableMap()
+        if (workflowName == "R") {
+            return 0
+        }
+        if (workflowName == "A") {
+            return ranges.values.map { it.length() }.reduce(Long::times)
+        }
+        var sum = 0L
+        val workflow = workflows[workflowName]!!
+        for ((name, op, cutoff, dest) in workflow) {
+            if (name in "xmas") {
+                val range: LongRange = ranges[name.first()]!!
+                val trueRange = if (op == "<") {
+                    range.first..<cutoff.toLong()
+                } else {
+                    cutoff.toLong() + 1..range.last
+                }
+                val falseRange = if (op == "<") {
+                    cutoff.toLong()..range.last
+                } else {
+                    range.first..cutoff.toLong()
+                }
+                if (trueRange.length() > 0) {
+                    val rangesCopy = ranges.toMutableMap()
+                    rangesCopy[name.first()] = trueRange
+                    sum += countRanges(rangesCopy, workflows, dest)
+                }
+                if (falseRange.length() > 0) {
+                    ranges[name.first()] = falseRange
+                } else {
+                    println(name)
+                    break
+                }
+            } else {
+                sum += countRanges(ranges, workflows, dest)
+            }
+        }
+
+        return sum
+    }
+
+    fun part2(input: List<String>): Long {
+        val workflows = mutableMapOf<String, List<String>>()
+
+        for (line in input) {
+            if (line.isBlank()) {
+                break
+            }
+
+            workflows[line.substringBefore("{")] =
+                line.substringAfter("{")
+                    .dropLast(1)
+                    .split(",")
+
+        }
+
+        val ruleBook = mutableMapOf<String, List<Rule>>()
+
+        for (workflow in workflows) {
+            val rules = mutableListOf<Rule>()
+            for (rule in workflow.value) {
+                if (!rule.contains("<") && !rule.contains(">")) {
+                    rules.add(Rule("other","", "", rule))
+                }
+                else {
+                    rules.add(Rule(
+                        rule.substring(0,1),
+                        rule[1].toString(),
+                        rule.substringBefore(":").drop(2),
+                        rule.substringAfter(":")
+                    ))
+                }
+            }
+            ruleBook[workflow.key] = rules
+        }
+
+        val ranges = "xmas".associateWith { 1L..4000L }
+        return countRanges(ranges, ruleBook, "in")
     }
 
     val input = readInput("Day19")
     part1(input).println()
-    // part2(input).println()
+    part2(input).println()
 }
