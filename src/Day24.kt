@@ -47,10 +47,14 @@ fun main() {
 
 		val t: Double
 		val s: Double
-		if (dirP.dy == 0.0) {
+
+		 if (dirP.dy == 0.0) {
 			t = (p.y - q.y) / dirQ.dy
 			s = (q.x - p.x + t * dirQ.dx) / dirP.dx
-		} else {
+		} else if (dirQ.dy == 0.0){
+			s = (q.y - p.y) / dirP.dy
+			t = (p.x + s * dirP.dx - q.x) / dirQ.dx
+		}  else {
 			t =
 				(p.x - q.x + q.y * (dirP.dx / dirP.dy) - p.y * (dirP.dx / dirP.dy)) / (dirQ.dx - dirQ.dy * (dirP.dx / dirP.dy))
 			s = (q.y + t * dirQ.dy - p.y) / dirP.dy
@@ -99,9 +103,9 @@ fun main() {
 
 		var rock = mutableSetOf<Position>()
 		while (rock.size != 1) {
-			val randomVectors = vectors.shuffled().take(5)
+			val randomVectors = vectors.shuffled().take(4)
 
-			val longRange = -500L..500L
+			val longRange = -300L..300L
 			for (vx in longRange) {
 				for (vy in longRange) {
 					val copies = mutableListOf<Vector>()
@@ -111,8 +115,9 @@ fun main() {
 					rock = mutableSetOf()
 					for (copy1 in copies) {
 						for (copy2 in copies) {
+							if (copy1 == copy2) break
 							if (copy1.vel.linearMultiple(copy2.vel)) break
-							if (copy1 == copy2) continue
+							if (copy1.vel.dy == 0.0 && copy2.vel.dy == 0.0) break
 							val (pos, _, _) = intersect(copy1, copy2)
 							rock.add(Position(pos.x, pos.y, pos.z))
 						}
@@ -149,7 +154,6 @@ fun main() {
 		return -1
 	}
 
-//	val input = readInput("Day24_test")
 	val input = readInput("Day24")
 	part1(input).println()
 	part2(input).println()
