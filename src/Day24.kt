@@ -183,7 +183,7 @@ fun main() {
 						val vz = (hailstone1.pos.z + t * hailstone1.vel.dz - hailstone2.pos.z - s * hailstone2.vel.dz) / (t - s)
 						val z = hailstone1.pos.z + t * (hailstone1.vel.dz - vz)
 						println(z.toLong())
-						return (rock.elementAt(0).x.toLong() + rock.elementAt(0).y.toLong() + z.toLong())
+						return (rock.elementAt(0).x + rock.elementAt(0).y + z.toLong())
 					}
 				}
 			}
