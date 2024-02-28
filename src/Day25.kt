@@ -1,3 +1,7 @@
+import org.jgrapht.alg.StoerWagnerMinimumCut
+import org.jgrapht.graph.DefaultEdge
+import org.jgrapht.graph.SimpleWeightedGraph
+
 fun main() {
 
 	fun toGraph(input: List<String>): MutableMap<String, MutableList<String>> {
@@ -45,14 +49,32 @@ fun main() {
 				graph.remove(b)
 				graph[newNode] = combinedNeighbours
 			}
-			val (A, B) = graph.keys.toList()
-			if (graph.getValue(A).size == 3) {
-				return counts.getValue(A) * counts.getValue(B)
+			val (a, b) = graph.keys.toList()
+			if (graph.getValue(a).size == 3) {
+				return counts.getValue(a) * counts.getValue(b)
 			}
 		}
 	}
 
+	fun jGraphSolution(input: List<String>): Int {
+		val graph = SimpleWeightedGraph<String, DefaultEdge>(DefaultEdge::class.java)
+
+		input.forEach { line ->
+			val (s, dests) = line.split(":")
+			dests.trim().split(" ").forEach { neighbour ->
+				if (!graph.containsVertex(s)) graph.addVertex(s)
+				if (!graph.containsVertex(neighbour)) graph.addVertex(neighbour)
+				graph.addEdge(s, neighbour)
+				graph.addEdge(neighbour, s)
+			}
+		}
+
+		val mincutS = StoerWagnerMinimumCut(graph).minCut().size
+		return ((graph.vertexSet().size - mincutS) * mincutS)
+	}
+
 //	val input = readInput("Day25_test")
 	val input = readInput("Day25")
+	jGraphSolution(input).println()
 	part1(input).println()
 }
